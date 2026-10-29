@@ -3,7 +3,7 @@
 > 批量把 PDF / Word / Excel / PPT / 图片里的敏感信息**真正删除**，而不是盖一层黑块。
 > 纯本地运行，文件不出本机，适合处理合同、报价单、客户名单、平台数据报告等。
 
-![版本](https://img.shields.io/badge/version-3.2-8b7355)
+![版本](https://img.shields.io/badge/version-3.3-8b7355)
 ![平台](https://img.shields.io/badge/platform-Windows-4a6fa5)
 ![Python](https://img.shields.io/badge/python-3.10%2B-3776ab)
 ![License](https://img.shields.io/badge/license-MIT-6b8e23)
@@ -46,6 +46,7 @@ DocRedact 走的是 PyMuPDF 的内容流删除：
 
 | 能力 | 说明 |
 |---|---|
+| 原生窗口 | 双击即开，不弹浏览器标签页，任务栏里就是一个普通软件 |
 | 多格式 | PDF、DOCX、XLSX、PPTX、PNG / JPG / BMP / TIFF |
 | 双层识别 | PDF 文本层按**字符**精确匹配；扫描件 / 截图 / 图表走 OCR |
 | 精准框选 | OCR 使用逐字符坐标，只遮关键词本身，不漏字也不吃掉整行 |
@@ -75,14 +76,22 @@ DocRedact 走的是 PyMuPDF 的内容流删除：
 
 ## 快速开始
 
-### 方式一：直接运行 exe（无需 Python）
+### 方式一：安装包（推荐，无需 Python）
 
-1. 下载 Release 里的 `DocRedactWeb_v3.2_win64.zip` 并解压
-2. 双击 `DocRedactWeb.exe`
-3. 控制台窗口会显示地址（默认 `http://127.0.0.1:5000`），浏览器一般会自动打开
-4. **不要关闭控制台窗口**，它就是服务本体
+1. 下载 Release 里的 `DocRedact_v3.3_setup.exe`（约 100 MB）
+2. 双击运行，跟着向导下一步（**不需要管理员权限**，装到当前用户目录）
+3. 桌面或开始菜单会出现「DocRedact 文档隐私遮罩工具」
 
-数据目录 `uploads/`、`outputs/` 会自动创建在 exe 旁边。
+装完双击即开，**直接弹出程序窗口，不打开浏览器**。OCR 模型已内置，完全离线。
+
+卸载走「设置 → 应用」或开始菜单里的卸载项；`uploads/`、`outputs/` 里的处理结果不会被删除。
+
+> 程序用系统自带的 WebView2 内核渲染界面（Win10 / Win11 均预装）。
+> 极少数精简版系统若提示缺失，装一下微软官方的 WebView2 Runtime 即可。
+
+### 方式一·备选：免安装绿色版
+
+Release 里同时提供 `DocRedact_v3.3_win64_portable.zip`，解压后双击 `DocRedact.exe` 即可，不写注册表。
 
 ### 方式二：源码运行
 
@@ -118,9 +127,9 @@ python app.py
 ## 技术实现
 
 ```
-浏览器 (单文件 SPA)
-   │  fetch JSON
-Flask 后端（任务队列 + 进度轮询 + 路径校验）
+原生窗口（pywebview + 系统 WebView2 内核）
+   │  载入单文件 SPA，fetch JSON
+Flask 后端（127.0.0.1 随机端口 + 任务队列 + 进度轮询 + 路径校验）
    │
 redact_engine.py
    ├─ PDF 文本层：rawdict → 逐字符 bbox → 滑窗匹配
@@ -128,6 +137,9 @@ redact_engine.py
    ├─ Office：python-docx / openpyxl / python-pptx 文本替换
    └─ 图片：OCR → PIL 绘制实心块
 ```
+
+界面仍然是那套 HTML/CSS，只是渲染容器从浏览器换成了程序自己的窗口 ——
+双击即开，没有地址栏、没有标签页，任务栏里就是一个普通软件。源码运行（`python app.py`）时仍走浏览器，方便调试。
 
 几个踩过坑的关键点：
 
@@ -175,10 +187,16 @@ OCR 返回的文本行含空格，但逐字符结果不含空格，直接比长�
 DocRedact/
 ├── app.py                    # Flask 后端：路由、任务队列、安全校验
 ├── redact_engine.py          # 遮罩引擎：PDF / OCR / Office / 图片
-├── app_exe.py                # exe 启动入口（只做路径适配）
-├── app_exe.spec              # PyInstaller 打包配置
-├── start_web.bat             # Windows 一键启动（源码运行）
-├── 使用说明.txt               # 给 exe 用户看的简版说明
+├── app_exe.py                # 桌面版启动器：后台跑服务 + pywebview 原生窗口
+├── app_exe.spec              # PyInstaller 打包配置（含模型/Native 依赖补位）
+├── installer.iss             # Inno Setup 安装包脚本
+├── installer/
+│   └── ChineseSimplified.isl # 安装向导简体中文语言包
+├── icon.ico                  # 程序图标（多尺寸）
+├── tools/
+│   └── make_icon.py          # 生成 icon.ico 与预览图
+├── start_web.bat             # 源码运行/浏览器模式的一键启动
+├── 使用说明.txt               # 给最终用户看的简版说明
 ├── web_ui/
 │   └── index.html            # 前端单文件（无构建步骤）
 ├── tests/
@@ -196,17 +214,30 @@ DocRedact/
 
 ## 自行打包
 
+**第一步：生成 exe**
+
 ```bash
-pip install pyinstaller
+pip install -r requirements.txt pyinstaller pywebview
 pyinstaller app_exe.spec --clean
 ```
 
-产物在 `dist/DocRedactWeb/`，整个目录一起压缩分发即可（约 270MB，压缩后约 110MB）。
+产物在 `dist/DocRedact/`（约 272 MB）。
 
-`app_exe.spec` 里有两个容易踩的坑，已经处理好：
+**第二步：生成安装包**
+
+装 [Inno Setup 6](https://jrsoftware.org/isdl.php) 后：
+
+```bash
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+```
+
+产物在 `release/DocRedact_v3.3_setup.exe`（约 100 MB）。
+
+`app_exe.spec` 里有三个容易踩的坑，已经处理好：
 
 - **OCR 模型必须显式打包**：RapidOCR 的 `config.yaml`、`default_models.yaml` 和 `models/*.onnx` 作为 datas 带入，否则目标机器无网络时 OCR 直接不可用
 - **MSVC 运行时版本对齐**：依赖里可能混进很旧的 `msvcp140.dll`（14.26），而 onnxruntime 1.26 需要新版运行时，否则 import 时报「DLL 初始化例程失败」，OCR 静默失效。spec 里统一替换为系统最新版本
+- **WebView2 原生加载器要补位**：`Microsoft.Web.WebView2.Core.dll` 被放在 `webview/lib/`，而它 P/Invoke 的 `WebView2Loader.dll` 被归到了 `runtimes/win-x64/native/`。冻结后 .NET 只在程序集同目录找原生依赖，找不到就初始化失败——表现是**窗口能打开但一片空白，且不报任何错**。spec 在 COLLECT 之后自动把 DLL 拷到 Core.dll 旁边
 
 ---
 
@@ -261,7 +292,9 @@ OCR 字符框来自识别结果，字距极密的排版下框会略有偏差。�
 - 手写体、艺术字、极低分辨率截图识别率不高
 - Office 文档遮罩会把关键词替换成 `█`，无法保留原字符格式（跨 run 时整段格式可能合并）
 - 加密 / 损坏的 PDF 直接报错，不做修复
-- exe 仅提供 Windows 64 位版本，其它平台请走源码运行
+- 仅提供 Windows 10/11 64 位版本，其它平台请走源码运行
+- 界面依赖系统自带的 WebView2 内核（Win10/11 预装）；Win7 或精简系统需自行安装 WebView2 Runtime，否则会降级为浏览器模式
+- 窗口内拖拽上传在部分 WebView2 版本上可能不响应，改用左侧「选择文件」按钮即可
 
 ---
 

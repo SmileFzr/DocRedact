@@ -9,6 +9,9 @@ venv/
 build/
 dist/
 release/
+_old_builds/
+_test_install*/
+_empty_tmp/
 *.spec.bak
 *.log
 
@@ -16,6 +19,8 @@ release/
 uploads/
 outputs/
 Output/
+ui_data/
+DocRedact_错误日志.txt
 DocRedact_Web_Share/
 
 # 旧版残留文件

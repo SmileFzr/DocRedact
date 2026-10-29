@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>文档隐私遮罩工具 v3.2</title>
+<title>文档隐私遮罩工具 v3.3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -287,7 +287,7 @@ button{font-family:inherit}
     <div class="brand">
         <div class="brand-mark">DR</div>
         <div class="brand-title">文档隐私遮罩工具</div>
-        <div class="brand-sub">v3.2</div>
+        <div class="brand-sub">v3.3</div>
     </div>
     <div class="header-right">
         <div class="badge" id="ocrBadge"><span class="dot" id="ocrDot"></span><span id="ocrText">检测中…</span></div>
@@ -465,7 +465,7 @@ const S = {
 };
 
 const $ = id => document.getElementById(id);
-const LS_KEY = 'docredact.keywords.v32';
+const LS_KEY = 'docredact.keywords.v33';
 
 /* ══════════════════════════════════════════════
    工具
@@ -1333,7 +1333,7 @@ $('previewArea').appendChild(emptyState(
     '遮罩完成后可在这里逐页核对，并和原图对比',
     ['完成遮罩', '逐页核对', '下载文件']
 ));
-log('文档隐私遮罩工具 v3.2 已就绪', 'success');
+log('文档隐私遮罩工具 v3.3 已就绪', 'success');
 log('支持 PDF / Word / Excel / PPT / 图片，可批量处理');
 log('流程：选择文件 → 添加关键词 → 查找 → 遮罩');
 </script>

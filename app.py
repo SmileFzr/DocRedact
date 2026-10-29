@@ -75,7 +75,7 @@ try:
 except Exception:
     app.config['JSON_AS_ASCII'] = False
 
-VERSION = '3.2'
+VERSION = '3.3'
 MAX_FILES_PER_JOB = 30
 MAX_KEYWORDS = 50
 MAX_KEYWORD_LEN = 300
