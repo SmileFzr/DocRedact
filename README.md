@@ -87,7 +87,7 @@ DocRedact 走的是 PyMuPDF 的内容流删除：
 ### 方式二：源码运行
 
 ```bash
-git clone https://github.com/<your-name>/DocRedact.git
+git clone https://github.com/SmileFzr/DocRedact.git
 cd DocRedact
 
 pip install -r requirements.txt
